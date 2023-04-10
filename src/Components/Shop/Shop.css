@@ -11,3 +11,7 @@
 
 
 }
+
+.cart-container {
+    position: sticky;
+}
