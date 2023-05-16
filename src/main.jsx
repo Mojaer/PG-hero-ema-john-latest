@@ -36,6 +36,10 @@ const router = createBrowserRouter([
       path: "/login",
       element: <Login></Login>
     },
+    {
+      path: "*",
+      element: <div><h1>This component is not implemented yet</h1><h2>Coming soon</h2> </div>
+    },
     ]
   },
 ]);

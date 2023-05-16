@@ -11,6 +11,7 @@ const ReviewOrders = ({ product, handleRemoveFromCart }) => {
                 <h5>{name}</h5>
                 <p>{quantity}</p>
                 <button onClick={() => handleRemoveFromCart(id)}>delete</button>
+
             </div>
 
 
