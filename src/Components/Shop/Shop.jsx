@@ -1,35 +1,65 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import Cart from './Cart/Cart';
 import Product from './Product/Product';
 import './Shop.css';
 import { addToDb, deleteShoppingCart, getShoppingCart } from '../../assets/utilities/fakedb';
-import { Link } from 'react-router-dom';
+import { Link, useLoaderData } from 'react-router-dom';
 
 const Shop = () => {
-    const [products, setProducts] = useState([])
+
+    let [products, setProducts] = useState([])
     const [cart, setCart] = useState([])
-    useEffect(() => {
-        fetch('http://localhost:4000/products')
-            .then((res) => res.json())
-            .then((data) => setProducts(data))
-    }, [])
+    const [content, setContent] = useState(10)
+    const [active, setActive] = useState(0)
+    const totalProducts = useLoaderData()
+    const numberOfPages = Math.ceil(totalProducts.productCount / content)
+
+    const pageNumbers = [...Array(numberOfPages).keys()]
+    // console.log(pageNumbers)
 
     useEffect(() => {
-        const storedCart = getShoppingCart()
-        const savedCart = []
+        const fetchData = async () => {
+            try {
 
-        for (const id in storedCart) {
-            const addedCart = products.find((product) => product._id === id)
-            if (addedCart) {
-                const quantity = storedCart[id]
-                addedCart.quantity = quantity
-                savedCart.push(addedCart);
+                const response = await fetch(`http://localhost:4000/products?page=${active}&limit=${content}`);
+                const data = await response.json();
+                setProducts(data);
+            } catch (error) {
+                // Handle the error appropriately
+                console.log('Error fetching data:', error);
             }
+        };
 
-        }
-        setCart(savedCart)
+        fetchData();
+    }, [active, content]);
 
-    }, [products])
+
+
+
+    useEffect(() => {
+        const fetchCartData = async () => {
+            try {
+                const storedCart = await getShoppingCart();
+                const savedCart = [];
+
+                for (const id in storedCart) {
+                    const addedCart = products.find((product) => product._id === id);
+                    if (addedCart) {
+                        const quantity = storedCart[id];
+                        addedCart.quantity = quantity;
+                        savedCart.push(addedCart);
+                    }
+                }
+
+                setCart(savedCart);
+            } catch (error) {
+                // Handle the error appropriately
+                console.log('Error fetching cart data:', error);
+            }
+        };
+
+        fetchCartData();
+    }, [products]);
 
     const handleAddToCart = (product) => {
         let newCart = [];
@@ -50,25 +80,59 @@ const Shop = () => {
         setCart(newCart)
         addToDb(product._id)
     }
-
     const handleClearCart = () => {
         setCart([])
         deleteShoppingCart()
     }
+
+    // number of products in a page 
+
+    const options = [10, 15, 20]
+
+    const contentChange = useCallback((event) => {
+        const content = event.target.value
+        setContent(content)
+    }, [content])
+
+    // active Pagination 
+
+    const PaginationBtn = (num) => {
+        setActive(num)
+    }
+
     return (
-        <div className='shop-container'>
-            <div className='product-container'>
+        <>
+            <div className='shop-container'>
+                <div className='product-container'>
+                    {
+                        products.map((product) => <Product product={product} key={product._id} handleAddToCart={handleAddToCart}></Product>)
+                    }
+                </div>
+                <div className='cart-container'>
+                    <Cart cart={cart} handleClearCart={handleClearCart}>
+                        <Link to='./orders'><button>Go to review order</button></Link>
+                    </Cart>
+                </div>
+
+            </div>
+            <div className='pagination'>
+                <select onChange={contentChange}>
+                    {options.map(option => (
+                        <option key={option} value={option}>
+                            {option}
+                        </option>
+                    ))}
+                </select>
                 {
-                    products.map((product) => <Product product={product} key={product._id} handleAddToCart={handleAddToCart}></Product>)
+                    pageNumbers.map(number =>
+                        <button key={number} className={active === number ? 'active' : 'notActive'}
+                            onClick={() => PaginationBtn(number)} >
+                            {number + 1}
+                        </button>)
                 }
             </div>
-            <div className='cart-container'>
-                <Cart cart={cart} handleClearCart={handleClearCart}>
-                    <Link to='./orders'><button>Go to review order</button></Link>
-                </Cart>
-            </div>
 
-        </div>
+        </>
     );
 };
 

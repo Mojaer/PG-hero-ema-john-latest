@@ -15,3 +15,16 @@
 .cart-container {
     position: sticky;
 }
+
+.pagination {
+    text-align: center;
+    margin-bottom: 4rem;
+}
+
+.active {
+    background-color: red;
+}
+
+.notActive {
+    background-color: aliceblue;
+}
